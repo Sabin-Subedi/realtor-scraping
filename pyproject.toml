@@ -1,0 +1,19 @@
+[project]
+name = "realtor-scrape"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "beanie>=2.0.0",
+    "fastapi[standard]>=0.116.1",
+    "httpx>=0.28.1",
+    "loguru>=0.7.3",
+    "motor>=3.7.1",
+    "playwright>=1.55.0",
+    "playwright-stealth>=2.0.0",
+    "pydantic>=2.11.8",
+    "pydantic-settings>=2.10.1",
+    "us>=3.2.0",
+    "uvicorn[standard]>=0.35.0",
+]

@@ -1,0 +1,48 @@
+
+services:
+  mongo:
+    image: mongo:latest
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - realtor-scrape-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    volumes:
+      - ./app:/app/app
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+    depends_on:
+      mongo:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - realtor-scrape-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+
+networks:
+  realtor-scrape-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
