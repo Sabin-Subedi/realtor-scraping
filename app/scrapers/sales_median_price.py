@@ -10,6 +10,9 @@ from datetime import datetime
 from app.utils import parse_currency
 from app.schemas import MedianScrapeOutput
 from app.config import settings
+import redis
+
+redis = redis.Redis.from_url(settings.REDIS_URI)
 
 
 class SalesMedianPriceScraper:
@@ -33,20 +36,62 @@ class SalesMedianPriceScraper:
             return json.loads(response.split("&&", 1)[1])
         return json.loads(response)
 
+    async def _get_scraping_headers(self):
+        headers = redis.get("redfin_headers")
+        if headers:
+            logger.info("Using cached headers")
+            return json.loads(headers)
+        logger.info("No cached headers found, scraping new ones")
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-dev-shm-usage",
+                    "--disable-extensions",
+                    "--no-first-run",
+                    "--disable-default-apps",
+                    "--disable-features=VizDisplayCompositor",
+                ],
+            )
+            context = await browser.new_context(
+                user_agent=self._get_random_user_agent(),
+            )
+            page = await context.new_page()
+            headers = {}
+
+            def on_request(response):
+                nonlocal headers
+                if "redfin.com" in response.url:
+                    headers = response.headers
+
+            page.on(
+                "request",
+                on_request,
+            )
+            await page.goto("https://www.redfin.com/", wait_until="domcontentloaded")
+            await page.wait_for_timeout(1000)
+            cookies = await page.evaluate("document.cookie")
+            headers["Cookie"] = cookies
+            await page.close()
+            await context.close()
+            await browser.close()
+            logger.info(f"Caching new headers for 24 hours: {headers}")
+            redis.set("redfin_headers", json.dumps(headers), ex=60 * 60 * 24)
+            logger.info("Headers cached successfully")
+
+            return headers
+
     async def _get_scraping_url(self, city: str, state: str, retry_count: int = 0):
-        async with AsyncClient(proxy=settings.WEBSHARE_ROTATING_PROXY_URL) as client:
+        async with AsyncClient(
+            proxy=settings.WEBSHARE_ROTATING_PROXY_URL, verify=False
+        ) as client:
+            headers = await self._get_scraping_headers()
             try:
                 response = await client.get(
                     f"https://www.redfin.com/stingray/do/location-autocomplete?location={city},{state}&v=2",  # noqa: E501
-                    headers={
-                        "User-Agent": self._get_random_user_agent(),
-                        "Accept": "application/json, text/plain, */*",
-                        "Accept-Language": "en-US,en;q=0.5",
-                        "Accept-Encoding": "gzip, deflate, br",
-                        "DNT": "1",
-                        "Connection": "keep-alive",
-                        "Upgrade-Insecure-Requests": "1",
-                    },
+                    headers=headers,
                 )
                 response.raise_for_status()
                 response_json = self._parse_response(response.text)
@@ -168,7 +213,6 @@ class SalesMedianPriceScraper:
             )
 
     async def scrape(self, city: str, state: str):
-
         scraping_url = await self._get_scraping_url(city, state)
         if not scraping_url:
             raise HTTPException(

@@ -16,6 +16,11 @@ services:
       retries: 5
       start_period: 30s
   
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+    networks:
+      - realtor-scrape-network
   app:
     build:
       context: .
@@ -29,6 +34,8 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_started
     env_file:
       - .env
     networks:
@@ -39,7 +46,7 @@ services:
       timeout: 30s
       retries: 3
       start_period: 30s
-
+  
 networks:
   realtor-scrape-network:
     driver: bridge
