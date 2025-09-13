@@ -13,6 +13,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     lifespan=lifespan,
+    title="Redfin Scraper",
+    description="A FastAPI-based web scraping service that retrieves median sale price data for US cities from redfin.com. The API scrapes real estate data and stores it in MongoDB for efficient retrieval.",  # noqa: E501
+    version="0.1.0",
 )
 
 

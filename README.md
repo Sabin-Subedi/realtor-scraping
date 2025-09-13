@@ -1,6 +1,30 @@
-# Realtor Scrape API
+# Redfin Scrape API
 
-A FastAPI-based web scraping service that retrieves median sale price data for US cities from realtor.com. The API scrapes real estate data and stores it in MongoDB for efficient retrieval.
+A FastAPI-based web scraping service that retrieves median sale price data for US cities from redfin.com. The API scrapes real estate data and stores it in MongoDB for efficient retrieval.
+
+## Table of Contents
+- [Redfin Scrape API](#redfin-scrape-api)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Prerequisites](#prerequisites)
+  - [Quick Start with Docker](#quick-start-with-docker)
+  - [Manual Setup (Development)](#manual-setup-development)
+  - [API Usage](#api-usage)
+    - [Base URL](#base-url)
+    - [Interactive Documentation](#interactive-documentation)
+    - [Visual Examples and Screenshots](#visual-examples-and-screenshots)
+    - [Endpoints](#endpoints)
+      - [1. Health Check](#1-health-check)
+      - [2. Get Median Sale Price](#2-get-median-sale-price)
+    - [Supported States](#supported-states)
+  - [Data Model](#data-model)
+    - [MedianSalePrice Document](#mediansaleprice-document)
+  - [Architecture](#architecture)
+  - [Development](#development)
+    - [Project Structure](#project-structure)
+  - [Troubleshooting](#troubleshooting)
+    - [Common Issues](#common-issues)
+    - [Logs](#logs)
 
 ## Features
 
@@ -90,6 +114,13 @@ Visit `http://localhost:8000/docs` for the Swagger UI interface where you can:
 - Test API calls directly in the browser
 - View request/response schemas
 - Download OpenAPI specification
+
+### Visual Examples and Screenshots
+For detailed API examples, response screenshots, and testing scenarios, see [API_EXAMPLES.md](API_EXAMPLES.md). This document includes:
+- Real API response examples with actual data
+- Screenshots of the Swagger UI interface
+- Error handling examples
+- Performance metrics and testing results
 
 ### Endpoints
 
@@ -195,11 +226,6 @@ realtor-scrape/
 └── pyproject.toml            # Project dependencies
 ```
 
-### Adding New Features
-1. Create new routers in `app/routers/`
-2. Add database models in `app/db/models.py`
-3. Define schemas in `app/schemas.py`
-4. Implement scrapers in `app/scrapers/`
 
 ## Troubleshooting
 
@@ -223,19 +249,3 @@ View application logs:
 ```bash
 docker-compose logs -f app
 ```
-
-## License
-
-This project is licensed under the MIT License.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## Support
-
-For issues and questions, please create an issue in the repository.
